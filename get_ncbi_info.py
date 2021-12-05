@@ -35,9 +35,18 @@ class get_info(object):
                 continue
             strain,biosample = line.split('\t')[0:2]
             url = 'https://www.ncbi.nlm.nih.gov/biosample/{}/'.format(biosample)
-            r = requests.get(url)
-            with open('net/{}.xml'.format(strain),'w') as f:
-                f.write(r.text)
+            output_name = 'net/{}.xml'.format(strain.replace("/",'_-').replace(':',"--"))
+            if os.path.exists(output_name) and os.stat(output_name).st_size != 0:
+                continue
+            try:
+                r = requests.get(url)
+            except:
+                print('error get : {}'.format(strain))
+            try:
+                with open(output_name,'w') as f:
+                    f.write(r.text)
+            except:
+                print('error write : {}'.format(strain))
         
     def refined(self):
         total = []
@@ -58,8 +67,11 @@ class get_info(object):
                 df1 = pandas.read_csv('temp/{}'.format(file),sep='\t').astype(str)
                 i -= 1
                 continue
-            df2 = pandas.read_csv('temp/{}'.format(file),sep='\t').astype(str)
-            df1 = pandas.merge(df1,df2,how='outer')
+            try:
+                df2 = pandas.read_csv('temp/{}'.format(file),sep='\t').astype(str)
+                df1 = pandas.merge(df1,df2,how='outer')
+            except:
+                print('error tsv : {}'.format(file))
         df1.to_csv('kv_output.tsv',sep='\t',index=False)
 
 if __name__ == '__main__':
